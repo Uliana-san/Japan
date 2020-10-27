@@ -1,0 +1,2004 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled34.ipynb",
+      "provenance": [],
+      "authorship_tag": "ABX9TyO8eM648CeUV+POGCbi3suT",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Uliana-san/Japan/blob/master/workbook%2034%20\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "rz7bbq59Omnp",
+        "colab_type": "code",
+        "outputId": "7bf5c919-cb99-440c-c7fc-4e3be7331048",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 71
+        }
+      },
+      "source": [
+        "import re\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "from nltk import word_tokenize\n",
+        "from nltk.corpus import stopwords\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "\n",
+        "%matplotlib inline"
+      ],
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "/usr/local/lib/python3.6/dist-packages/statsmodels/tools/_testing.py:19: FutureWarning: pandas.util.testing is deprecated. Use the functions in the public API at pandas.testing instead.\n",
+            "  import pandas.util.testing as tm\n"
+          ],
+          "name": "stderr"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "8g0fApfueIiW",
+        "colab_type": "text"
+      },
+      "source": [
+        "Данные"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "piDqK9wpOtOq",
+        "colab_type": "code",
+        "outputId": "101ec3b7-e751-4e0e-b763-4dae22ec3401",
+        "colab": {
+          "resources": {
+            "http://localhost:8080/nbextensions/google.colab/files.js": {
+              "data": "Ly8gQ29weXJpZ2h0IDIwMTcgR29vZ2xlIExMQwovLwovLyBMaWNlbnNlZCB1bmRlciB0aGUgQXBhY2hlIExpY2Vuc2UsIFZlcnNpb24gMi4wICh0aGUgIkxpY2Vuc2UiKTsKLy8geW91IG1heSBub3QgdXNlIHRoaXMgZmlsZSBleGNlcHQgaW4gY29tcGxpYW5jZSB3aXRoIHRoZSBMaWNlbnNlLgovLyBZb3UgbWF5IG9idGFpbiBhIGNvcHkgb2YgdGhlIExpY2Vuc2UgYXQKLy8KLy8gICAgICBodHRwOi8vd3d3LmFwYWNoZS5vcmcvbGljZW5zZXMvTElDRU5TRS0yLjAKLy8KLy8gVW5sZXNzIHJlcXVpcmVkIGJ5IGFwcGxpY2FibGUgbGF3IG9yIGFncmVlZCB0byBpbiB3cml0aW5nLCBzb2Z0d2FyZQovLyBkaXN0cmlidXRlZCB1bmRlciB0aGUgTGljZW5zZSBpcyBkaXN0cmlidXRlZCBvbiBhbiAiQVMgSVMiIEJBU0lTLAovLyBXSVRIT1VUIFdBUlJBTlRJRVMgT1IgQ09ORElUSU9OUyBPRiBBTlkgS0lORCwgZWl0aGVyIGV4cHJlc3Mgb3IgaW1wbGllZC4KLy8gU2VlIHRoZSBMaWNlbnNlIGZvciB0aGUgc3BlY2lmaWMgbGFuZ3VhZ2UgZ292ZXJuaW5nIHBlcm1pc3Npb25zIGFuZAovLyBsaW1pdGF0aW9ucyB1bmRlciB0aGUgTGljZW5zZS4KCi8qKgogKiBAZmlsZW92ZXJ2aWV3IEhlbHBlcnMgZm9yIGdvb2dsZS5jb2xhYiBQeXRob24gbW9kdWxlLgogKi8KKGZ1bmN0aW9uKHNjb3BlKSB7CmZ1bmN0aW9uIHNwYW4odGV4dCwgc3R5bGVBdHRyaWJ1dGVzID0ge30pIHsKICBjb25zdCBlbGVtZW50ID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc3BhbicpOwogIGVsZW1lbnQudGV4dENvbnRlbnQgPSB0ZXh0OwogIGZvciAoY29uc3Qga2V5IG9mIE9iamVjdC5rZXlzKHN0eWxlQXR0cmlidXRlcykpIHsKICAgIGVsZW1lbnQuc3R5bGVba2V5XSA9IHN0eWxlQXR0cmlidXRlc1trZXldOwogIH0KICByZXR1cm4gZWxlbWVudDsKfQoKLy8gTWF4IG51bWJlciBvZiBieXRlcyB3aGljaCB3aWxsIGJlIHVwbG9hZGVkIGF0IGEgdGltZS4KY29uc3QgTUFYX1BBWUxPQURfU0laRSA9IDEwMCAqIDEwMjQ7Ci8vIE1heCBhbW91bnQgb2YgdGltZSB0byBibG9jayB3YWl0aW5nIGZvciB0aGUgdXNlci4KY29uc3QgRklMRV9DSEFOR0VfVElNRU9VVF9NUyA9IDMwICogMTAwMDsKCmZ1bmN0aW9uIF91cGxvYWRGaWxlcyhpbnB1dElkLCBvdXRwdXRJZCkgewogIGNvbnN0IHN0ZXBzID0gdXBsb2FkRmlsZXNTdGVwKGlucHV0SWQsIG91dHB1dElkKTsKICBjb25zdCBvdXRwdXRFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQob3V0cHV0SWQpOwogIC8vIENhY2hlIHN0ZXBzIG9uIHRoZSBvdXRwdXRFbGVtZW50IHRvIG1ha2UgaXQgYXZhaWxhYmxlIGZvciB0aGUgbmV4dCBjYWxsCiAgLy8gdG8gdXBsb2FkRmlsZXNDb250aW51ZSBmcm9tIFB5dGhvbi4KICBvdXRwdXRFbGVtZW50LnN0ZXBzID0gc3RlcHM7CgogIHJldHVybiBfdXBsb2FkRmlsZXNDb250aW51ZShvdXRwdXRJZCk7Cn0KCi8vIFRoaXMgaXMgcm91Z2hseSBhbiBhc3luYyBnZW5lcmF0b3IgKG5vdCBzdXBwb3J0ZWQgaW4gdGhlIGJyb3dzZXIgeWV0KSwKLy8gd2hlcmUgdGhlcmUgYXJlIG11bHRpcGxlIGFzeW5jaHJvbm91cyBzdGVwcyBhbmQgdGhlIFB5dGhvbiBzaWRlIGlzIGdvaW5nCi8vIHRvIHBvbGwgZm9yIGNvbXBsZXRpb24gb2YgZWFjaCBzdGVwLgovLyBUaGlzIHVzZXMgYSBQcm9taXNlIHRvIGJsb2NrIHRoZSBweXRob24gc2lkZSBvbiBjb21wbGV0aW9uIG9mIGVhY2ggc3RlcCwKLy8gdGhlbiBwYXNzZXMgdGhlIHJlc3VsdCBvZiB0aGUgcHJldmlvdXMgc3RlcCBhcyB0aGUgaW5wdXQgdG8gdGhlIG5leHQgc3RlcC4KZnVuY3Rpb24gX3VwbG9hZEZpbGVzQ29udGludWUob3V0cHV0SWQpIHsKICBjb25zdCBvdXRwdXRFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQob3V0cHV0SWQpOwogIGNvbnN0IHN0ZXBzID0gb3V0cHV0RWxlbWVudC5zdGVwczsKCiAgY29uc3QgbmV4dCA9IHN0ZXBzLm5leHQob3V0cHV0RWxlbWVudC5sYXN0UHJvbWlzZVZhbHVlKTsKICByZXR1cm4gUHJvbWlzZS5yZXNvbHZlKG5leHQudmFsdWUucHJvbWlzZSkudGhlbigodmFsdWUpID0+IHsKICAgIC8vIENhY2hlIHRoZSBsYXN0IHByb21pc2UgdmFsdWUgdG8gbWFrZSBpdCBhdmFpbGFibGUgdG8gdGhlIG5leHQKICAgIC8vIHN0ZXAgb2YgdGhlIGdlbmVyYXRvci4KICAgIG91dHB1dEVsZW1lbnQubGFzdFByb21pc2VWYWx1ZSA9IHZhbHVlOwogICAgcmV0dXJuIG5leHQudmFsdWUucmVzcG9uc2U7CiAgfSk7Cn0KCi8qKgogKiBHZW5lcmF0b3IgZnVuY3Rpb24gd2hpY2ggaXMgY2FsbGVkIGJldHdlZW4gZWFjaCBhc3luYyBzdGVwIG9mIHRoZSB1cGxvYWQKICogcHJvY2Vzcy4KICogQHBhcmFtIHtzdHJpbmd9IGlucHV0SWQgRWxlbWVudCBJRCBvZiB0aGUgaW5wdXQgZmlsZSBwaWNrZXIgZWxlbWVudC4KICogQHBhcmFtIHtzdHJpbmd9IG91dHB1dElkIEVsZW1lbnQgSUQgb2YgdGhlIG91dHB1dCBkaXNwbGF5LgogKiBAcmV0dXJuIHshSXRlcmFibGU8IU9iamVjdD59IEl0ZXJhYmxlIG9mIG5leHQgc3RlcHMuCiAqLwpmdW5jdGlvbiogdXBsb2FkRmlsZXNTdGVwKGlucHV0SWQsIG91dHB1dElkKSB7CiAgY29uc3QgaW5wdXRFbGVtZW50ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoaW5wdXRJZCk7CiAgaW5wdXRFbGVtZW50LmRpc2FibGVkID0gZmFsc2U7CgogIGNvbnN0IG91dHB1dEVsZW1lbnQgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZChvdXRwdXRJZCk7CiAgb3V0cHV0RWxlbWVudC5pbm5lckhUTUwgPSAnJzsKCiAgY29uc3QgcGlja2VkUHJvbWlzZSA9IG5ldyBQcm9taXNlKChyZXNvbHZlKSA9PiB7CiAgICBpbnB1dEVsZW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignY2hhbmdlJywgKGUpID0+IHsKICAgICAgcmVzb2x2ZShlLnRhcmdldC5maWxlcyk7CiAgICB9KTsKICB9KTsKCiAgY29uc3QgY2FuY2VsID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnYnV0dG9uJyk7CiAgaW5wdXRFbGVtZW50LnBhcmVudEVsZW1lbnQuYXBwZW5kQ2hpbGQoY2FuY2VsKTsKICBjYW5jZWwudGV4dENvbnRlbnQgPSAnQ2FuY2VsIHVwbG9hZCc7CiAgY29uc3QgY2FuY2VsUHJvbWlzZSA9IG5ldyBQcm9taXNlKChyZXNvbHZlKSA9PiB7CiAgICBjYW5jZWwub25jbGljayA9ICgpID0+IHsKICAgICAgcmVzb2x2ZShudWxsKTsKICAgIH07CiAgfSk7CgogIC8vIENhbmNlbCB1cGxvYWQgaWYgdXNlciBoYXNuJ3QgcGlja2VkIGFueXRoaW5nIGluIHRpbWVvdXQuCiAgY29uc3QgdGltZW91dFByb21pc2UgPSBuZXcgUHJvbWlzZSgocmVzb2x2ZSkgPT4gewogICAgc2V0VGltZW91dCgoKSA9PiB7CiAgICAgIHJlc29sdmUobnVsbCk7CiAgICB9LCBGSUxFX0NIQU5HRV9USU1FT1VUX01TKTsKICB9KTsKCiAgLy8gV2FpdCBmb3IgdGhlIHVzZXIgdG8gcGljayB0aGUgZmlsZXMuCiAgY29uc3QgZmlsZXMgPSB5aWVsZCB7CiAgICBwcm9taXNlOiBQcm9taXNlLnJhY2UoW3BpY2tlZFByb21pc2UsIHRpbWVvdXRQcm9taXNlLCBjYW5jZWxQcm9taXNlXSksCiAgICByZXNwb25zZTogewogICAgICBhY3Rpb246ICdzdGFydGluZycsCiAgICB9CiAgfTsKCiAgaWYgKCFmaWxlcykgewogICAgcmV0dXJuIHsKICAgICAgcmVzcG9uc2U6IHsKICAgICAgICBhY3Rpb246ICdjb21wbGV0ZScsCiAgICAgIH0KICAgIH07CiAgfQoKICBjYW5jZWwucmVtb3ZlKCk7CgogIC8vIERpc2FibGUgdGhlIGlucHV0IGVsZW1lbnQgc2luY2UgZnVydGhlciBwaWNrcyBhcmUgbm90IGFsbG93ZWQuCiAgaW5wdXRFbGVtZW50LmRpc2FibGVkID0gdHJ1ZTsKCiAgZm9yIChjb25zdCBmaWxlIG9mIGZpbGVzKSB7CiAgICBjb25zdCBsaSA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2xpJyk7CiAgICBsaS5hcHBlbmQoc3BhbihmaWxlLm5hbWUsIHtmb250V2VpZ2h0OiAnYm9sZCd9KSk7CiAgICBsaS5hcHBlbmQoc3BhbigKICAgICAgICBgKCR7ZmlsZS50eXBlIHx8ICduL2EnfSkgLSAke2ZpbGUuc2l6ZX0gYnl0ZXMsIGAgKwogICAgICAgIGBsYXN0IG1vZGlmaWVkOiAkewogICAgICAgICAgICBmaWxlLmxhc3RNb2RpZmllZERhdGUgPyBmaWxlLmxhc3RNb2RpZmllZERhdGUudG9Mb2NhbGVEYXRlU3RyaW5nKCkgOgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAnbi9hJ30gLSBgKSk7CiAgICBjb25zdCBwZXJjZW50ID0gc3BhbignMCUgZG9uZScpOwogICAgbGkuYXBwZW5kQ2hpbGQocGVyY2VudCk7CgogICAgb3V0cHV0RWxlbWVudC5hcHBlbmRDaGlsZChsaSk7CgogICAgY29uc3QgZmlsZURhdGFQcm9taXNlID0gbmV3IFByb21pc2UoKHJlc29sdmUpID0+IHsKICAgICAgY29uc3QgcmVhZGVyID0gbmV3IEZpbGVSZWFkZXIoKTsKICAgICAgcmVhZGVyLm9ubG9hZCA9IChlKSA9PiB7CiAgICAgICAgcmVzb2x2ZShlLnRhcmdldC5yZXN1bHQpOwogICAgICB9OwogICAgICByZWFkZXIucmVhZEFzQXJyYXlCdWZmZXIoZmlsZSk7CiAgICB9KTsKICAgIC8vIFdhaXQgZm9yIHRoZSBkYXRhIHRvIGJlIHJlYWR5LgogICAgbGV0IGZpbGVEYXRhID0geWllbGQgewogICAgICBwcm9taXNlOiBmaWxlRGF0YVByb21pc2UsCiAgICAgIHJlc3BvbnNlOiB7CiAgICAgICAgYWN0aW9uOiAnY29udGludWUnLAogICAgICB9CiAgICB9OwoKICAgIC8vIFVzZSBhIGNodW5rZWQgc2VuZGluZyB0byBhdm9pZCBtZXNzYWdlIHNpemUgbGltaXRzLiBTZWUgYi82MjExNTY2MC4KICAgIGxldCBwb3NpdGlvbiA9IDA7CiAgICB3aGlsZSAocG9zaXRpb24gPCBmaWxlRGF0YS5ieXRlTGVuZ3RoKSB7CiAgICAgIGNvbnN0IGxlbmd0aCA9IE1hdGgubWluKGZpbGVEYXRhLmJ5dGVMZW5ndGggLSBwb3NpdGlvbiwgTUFYX1BBWUxPQURfU0laRSk7CiAgICAgIGNvbnN0IGNodW5rID0gbmV3IFVpbnQ4QXJyYXkoZmlsZURhdGEsIHBvc2l0aW9uLCBsZW5ndGgpOwogICAgICBwb3NpdGlvbiArPSBsZW5ndGg7CgogICAgICBjb25zdCBiYXNlNjQgPSBidG9hKFN0cmluZy5mcm9tQ2hhckNvZGUuYXBwbHkobnVsbCwgY2h1bmspKTsKICAgICAgeWllbGQgewogICAgICAgIHJlc3BvbnNlOiB7CiAgICAgICAgICBhY3Rpb246ICdhcHBlbmQnLAogICAgICAgICAgZmlsZTogZmlsZS5uYW1lLAogICAgICAgICAgZGF0YTogYmFzZTY0LAogICAgICAgIH0sCiAgICAgIH07CiAgICAgIHBlcmNlbnQudGV4dENvbnRlbnQgPQogICAgICAgICAgYCR7TWF0aC5yb3VuZCgocG9zaXRpb24gLyBmaWxlRGF0YS5ieXRlTGVuZ3RoKSAqIDEwMCl9JSBkb25lYDsKICAgIH0KICB9CgogIC8vIEFsbCBkb25lLgogIHlpZWxkIHsKICAgIHJlc3BvbnNlOiB7CiAgICAgIGFjdGlvbjogJ2NvbXBsZXRlJywKICAgIH0KICB9Owp9CgpzY29wZS5nb29nbGUgPSBzY29wZS5nb29nbGUgfHwge307CnNjb3BlLmdvb2dsZS5jb2xhYiA9IHNjb3BlLmdvb2dsZS5jb2xhYiB8fCB7fTsKc2NvcGUuZ29vZ2xlLmNvbGFiLl9maWxlcyA9IHsKICBfdXBsb2FkRmlsZXMsCiAgX3VwbG9hZEZpbGVzQ29udGludWUsCn07Cn0pKHNlbGYpOwo=",
+              "ok": true,
+              "headers": [
+                [
+                  "content-type",
+                  "application/javascript"
+                ]
+              ],
+              "status": 200,
+              "status_text": ""
+            }
+          },
+          "base_uri": "https://localhost:8080/",
+          "height": 71
+        }
+      },
+      "source": [
+        "\n",
+        "from google.colab import files\n",
+        "uploaded = files.upload()"
+      ],
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/html": [
+              "\n",
+              "     <input type=\"file\" id=\"files-e8d7fb2c-e56b-4dc7-9f90-7ddb75586bd2\" name=\"files[]\" multiple disabled />\n",
+              "     <output id=\"result-e8d7fb2c-e56b-4dc7-9f90-7ddb75586bd2\">\n",
+              "      Upload widget is only available when the cell has been executed in the\n",
+              "      current browser session. Please rerun this cell to enable.\n",
+              "      </output>\n",
+              "      <script src=\"/nbextensions/google.colab/files.js\"></script> "
+            ],
+            "text/plain": [
+              "<IPython.core.display.HTML object>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          }
+        },
+        {
+          "output_type": "stream",
+          "text": [
+            "Saving AGT.csv to AGT.csv\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "BniJG9C2RheP",
+        "colab_type": "code",
+        "outputId": "037ec868-a5f7-4a9e-f454-b098efced3b7",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 207
+        }
+      },
+      "source": [
+        "!head AGT.csv"
+      ],
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "tid;sid;cent;title;author;translator;year_trans;change_range;change_type;dia_change;add_W;ag_orig;ag_orig_range;ag_otype;ag_trans;ag_ttype;ag_tt_range;hedge_type;pred_orig;pred_trans;pred_ttype;pred_tt_range;text_orig;text_trans\r\n",
+            "1;1;19;Idiot;Dostoevsky;Nakayama;1934;4;act_reduct;0;;впечатление;5;feeling;впечатление;feeling;5;;оставлять;nokoru;VINTR;5;давешнее впечатление почти не оставляло его;さっきの印象が、まだほとんど残っていたが、\r\n",
+            "1;2;19;Idiot;Dostoevsky;Kimura;1970;5;hedge_body;0;hedge;впечатление;5;feeling;впечатление;feeling;5;心;оставлять;saru;VTRH;6;давешнее впечатление почти не оставляло его;先ほどの印象はあれからずっと彼の心を去らなかったので、\r\n",
+            "1;3;19;Idiot;Dostoevsky;Mochizuki;2010;4;act_reduct;0;;впечатление;5;feeling;впечатление;feeling;5;;оставлять;nokoru;VINTR;5;давешнее впечатление почти не оставляло его;さっきの印象はほとんどそのままに残っていた\r\n",
+            "1;4;19;Idiot;Dostoevsky;Kameyama;2015;4;act_reduct;0;hedge;впечатление;5;feeling;впечатление;feeling;5;心;оставлять;hanareru;VINTRH;4;давешнее впечатление почти не оставляло его;さっき受けた印象がなかなか心から離れず、\r\n",
+            "1;5;19;Idiot;Dostoevsky;Nakayama;1934;1;sub_change;1;;мысль;4;intellect;человек;human;6;;поразить;suru;VTR;7;его неприятно поразила и мысль о записке;頼まれたことを思い、ガーニャがアグラーヤにやる手紙のことを思うと、不愉快な気持がしてならなかった。\r\n",
+            "1;6;19;Idiot;Dostoevsky;Kimura;1970;1;sub_change;1;hedge;мысль;4;intellect;человек;human;6;心;поразить;ataeru;VTRH;6;его неприятно поразила и мысль о записке;…と考えることも心に不愉快なショックを与えた。\r\n",
+            "1;7;19;Idiot;Dostoevsky;Mochizuki;2010;4;act_reduct;0;nom;мысль;4;intellect;мысль;intellect;4;;поразить;odoroki;N;2;его неприятно поразила и мысль о записке;考え自体も、また不快な驚きだった。\r\n",
+            "1;8;19;Idiot;Dostoevsky;Kameyama;2015;1;sub_change;1;;мысль;4;intellect;человек;human;6;;поразить;oboeru;VTR;7;его неприятно поразила и мысль о записке;依頼は…こと自体に、不快な驚きを覚えていた。\r\n",
+            "1;9;19;Idiot;Dostoevsky;Nakayama;1934;5;hedge_body;0;;чувство;5;feeling;чувство;feeling;5;心;уязвить;sasu ;VTRH;6;что-то тяжелое и неприятное как бы уязвило князя;何かしら、重苦しい、不愉快なものがあたかも公爵の心をちくりと刺したように思われた。\r\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "1ZhSTjEkeK6D",
+        "colab_type": "text"
+      },
+      "source": [
+        "Предобработка"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "mAr2TTH0amc7",
+        "colab_type": "code",
+        "outputId": "5ba40aeb-28b5-44d4-c560-feb6febcfdf2",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        }
+      },
+      "source": [
+        "df_AGT = pd.read_csv('AGT.csv', index_col='sid', sep = ';')\n",
+        "df_AGT.dropna(subset=[\"text_orig\"], inplace=True)\n",
+        "df_AGT.dropna(subset=[\"ag_orig_range\"], inplace=True)\n",
+        "df_AGT"
+      ],
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>tid</th>\n",
+              "      <th>cent</th>\n",
+              "      <th>title</th>\n",
+              "      <th>author</th>\n",
+              "      <th>translator</th>\n",
+              "      <th>year_trans</th>\n",
+              "      <th>change_range</th>\n",
+              "      <th>change_type</th>\n",
+              "      <th>dia_change</th>\n",
+              "      <th>add_W</th>\n",
+              "      <th>ag_orig</th>\n",
+              "      <th>ag_orig_range</th>\n",
+              "      <th>ag_otype</th>\n",
+              "      <th>ag_trans</th>\n",
+              "      <th>ag_ttype</th>\n",
+              "      <th>ag_tt_range</th>\n",
+              "      <th>hedge_type</th>\n",
+              "      <th>pred_orig</th>\n",
+              "      <th>pred_trans</th>\n",
+              "      <th>pred_ttype</th>\n",
+              "      <th>pred_tt_range</th>\n",
+              "      <th>text_orig</th>\n",
+              "      <th>text_trans</th>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>sid</th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "      <th></th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Nakayama</td>\n",
+              "      <td>1934</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>act_reduct</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>nokoru</td>\n",
+              "      <td>VINTR</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>さっきの印象が、まだほとんど残っていたが、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kimura</td>\n",
+              "      <td>1970</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>心</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>saru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>先ほどの印象はあれからずっと彼の心を去らなかったので、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Mochizuki</td>\n",
+              "      <td>2010</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>act_reduct</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>nokoru</td>\n",
+              "      <td>VINTR</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>さっきの印象はほとんどそのままに残っていた</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kameyama</td>\n",
+              "      <td>2015</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>act_reduct</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>心</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>hanareru</td>\n",
+              "      <td>VINTRH</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>さっき受けた印象がなかなか心から離れず、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>5</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Nakayama</td>\n",
+              "      <td>1934</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>sub_change</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>поразить</td>\n",
+              "      <td>suru</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>его неприятно поразила и мысль о записке</td>\n",
+              "      <td>頼まれたことを思い、ガーニャがアグラーヤにやる手紙のことを思うと、不愉快な気持がしてならなかった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>...</th>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>680</th>\n",
+              "      <td>21.0</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Tsentrovka</td>\n",
+              "      <td>Tokareva</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>1998</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>sub_change</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>обстоятельство</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>вдохновлять</td>\n",
+              "      <td>kandousuru</td>\n",
+              "      <td>VINTR</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>это вдохновило меня до озноба.</td>\n",
+              "      <td>そう思うと、背筋がぞくぞくするほど感動してしまった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>681</th>\n",
+              "      <td>21.0</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Tsentrovka</td>\n",
+              "      <td>Tokareva</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>1998</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>смерть</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>смерть</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>3</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>завладеть</td>\n",
+              "      <td>gyuujiru</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>Смерть пришла как дело и жизнью завладела</td>\n",
+              "      <td>死がなすべき務めのようにやって来て、生を牛耳ってしまった</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>682</th>\n",
+              "      <td>21.0</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Tsentrovka</td>\n",
+              "      <td>Tokareva</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>1998</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>игла</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>игла</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>1</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>пронзить</td>\n",
+              "      <td>tsukisasu</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>Игла жалости пронзила меня насквозь.</td>\n",
+              "      <td>哀れみのトゲが奥の奥まで突き刺さった</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>683</th>\n",
+              "      <td>21.0</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Tsentrovka</td>\n",
+              "      <td>Tokareva</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>1998</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>sub_change</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>смерть</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>интересовать</td>\n",
+              "      <td>motsu</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>но даже Смерть ее не заинтересовала.</td>\n",
+              "      <td>死神にさえ関心を持たなくなっていた</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>684</th>\n",
+              "      <td>21.0</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Tsentrovka</td>\n",
+              "      <td>Tokareva</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>1998</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>passive</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>луна</td>\n",
+              "      <td>2</td>\n",
+              "      <td>nature</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>NaN</td>\n",
+              "      <td>врать</td>\n",
+              "      <td>taburakasu</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>Луна будет им врать своей многозначительностью</td>\n",
+              "      <td>お月様の意味深長な様子にたぶらかされる</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "<p>684 rows × 23 columns</p>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "      tid  ...                                         text_trans\n",
+              "sid        ...                                                   \n",
+              "1     1.0  ...                              さっきの印象が、まだほとんど残っていたが、\n",
+              "2     1.0  ...                        先ほどの印象はあれからずっと彼の心を去らなかったので、\n",
+              "3     1.0  ...                              さっきの印象はほとんどそのままに残っていた\n",
+              "4     1.0  ...                               さっき受けた印象がなかなか心から離れず、\n",
+              "5     1.0  ...  頼まれたことを思い、ガーニャがアグラーヤにやる手紙のことを思うと、不愉快な気持がしてならなかった。\n",
+              "..    ...  ...                                                ...\n",
+              "680  21.0  ...                         そう思うと、背筋がぞくぞくするほど感動してしまった。\n",
+              "681  21.0  ...                       死がなすべき務めのようにやって来て、生を牛耳ってしまった\n",
+              "682  21.0  ...                                 哀れみのトゲが奥の奥まで突き刺さった\n",
+              "683  21.0  ...                                  死神にさえ関心を持たなくなっていた\n",
+              "684  21.0  ...                                お月様の意味深長な様子にたぶらかされる\n",
+              "\n",
+              "[684 rows x 23 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 5
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "Fc62iZP6SD5A",
+        "colab_type": "code",
+        "outputId": "b7ea9063-5c1d-435c-bb73-70553c80ce50",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        }
+      },
+      "source": [
+        "# не надо\n",
+        "df_AGT = pd.read_csv('AGT.csv', sep = ';')\n",
+        "df_AGT.dropna(inplace=True)\n",
+        "df_AGT\n"
+      ],
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>tid</th>\n",
+              "      <th>sid</th>\n",
+              "      <th>cent</th>\n",
+              "      <th>title</th>\n",
+              "      <th>author</th>\n",
+              "      <th>translator</th>\n",
+              "      <th>year_trans</th>\n",
+              "      <th>change_range</th>\n",
+              "      <th>change_type</th>\n",
+              "      <th>dia_change</th>\n",
+              "      <th>add_W</th>\n",
+              "      <th>ag_orig</th>\n",
+              "      <th>ag_orig_range</th>\n",
+              "      <th>ag_otype</th>\n",
+              "      <th>ag_trans</th>\n",
+              "      <th>ag_ttype</th>\n",
+              "      <th>ag_tt_range</th>\n",
+              "      <th>hedge_type</th>\n",
+              "      <th>pred_orig</th>\n",
+              "      <th>pred_trans</th>\n",
+              "      <th>pred_ttype</th>\n",
+              "      <th>pred_tt_range</th>\n",
+              "      <th>text_orig</th>\n",
+              "      <th>text_trans</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>2</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kimura</td>\n",
+              "      <td>1970</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>心</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>saru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>先ほどの印象はあれからずっと彼の心を去らなかったので、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>4</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kameyama</td>\n",
+              "      <td>2015</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>act_reduct</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>впечатление</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>心</td>\n",
+              "      <td>оставлять</td>\n",
+              "      <td>hanareru</td>\n",
+              "      <td>VINTRH</td>\n",
+              "      <td>4.0</td>\n",
+              "      <td>давешнее впечатление почти не оставляло его</td>\n",
+              "      <td>さっき受けた印象がなかなか心から離れず、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>5</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>6</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kimura</td>\n",
+              "      <td>1970</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>sub_change</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>поразить</td>\n",
+              "      <td>ataeru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>его неприятно поразила и мысль о записке</td>\n",
+              "      <td>…と考えることも心に不愉快なショックを与えた。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>22</th>\n",
+              "      <td>1.0</td>\n",
+              "      <td>23</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Idiot</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Mochizuki</td>\n",
+              "      <td>2010</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge, cause</td>\n",
+              "      <td>дрожь</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>дрожь</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>体 骨</td>\n",
+              "      <td>пробирать</td>\n",
+              "      <td>furuu</td>\n",
+              "      <td>VC</td>\n",
+              "      <td>9.0</td>\n",
+              "      <td>кривился чиновник, и даже дрожь его пробирала</td>\n",
+              "      <td>役人は恐怖に顔を歪め、おまけに対中ぶるぶる震わせていた。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>29</th>\n",
+              "      <td>2.0</td>\n",
+              "      <td>30</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Prestuplenie I nakazanie</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kameyama</td>\n",
+              "      <td>2009</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>4</td>\n",
+              "      <td>心</td>\n",
+              "      <td>занимать</td>\n",
+              "      <td>shimeru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>одна беспокойная и не совсем ясная мысль заним...</td>\n",
+              "      <td>今何よりも彼の心を占めていたのは、ある不安な、どことなくはっきりしない考えだ。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>30</th>\n",
+              "      <td>2.0</td>\n",
+              "      <td>31</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Prestuplenie I nakazanie</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kudo</td>\n",
+              "      <td>1961</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge, pass</td>\n",
+              "      <td>цветы</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>занимать</td>\n",
+              "      <td>hiku</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>Особенно занимали его цветы.</td>\n",
+              "      <td>АФФ 特に彼は花に心をひかれて</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>31</th>\n",
+              "      <td>2.0</td>\n",
+              "      <td>32</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Prestuplenie I nakazanie</td>\n",
+              "      <td>Dostoevsky</td>\n",
+              "      <td>Kameyama</td>\n",
+              "      <td>2009</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>цветы</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>цветы</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>1</td>\n",
+              "      <td>注意</td>\n",
+              "      <td>занимать</td>\n",
+              "      <td>hiku</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>7.0</td>\n",
+              "      <td>Особенно занимали его цветы.</td>\n",
+              "      <td>とりわけ注意を惹いたのは花々で、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>71</th>\n",
+              "      <td>5.0</td>\n",
+              "      <td>72</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Dushechka</td>\n",
+              "      <td>Chehov</td>\n",
+              "      <td>Jinzai</td>\n",
+              "      <td>1933</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge, pass</td>\n",
+              "      <td>несчастья</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>трогать</td>\n",
+              "      <td>ugokasu</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>В конце концов несчастья Кукина тронули ее, он...</td>\n",
+              "      <td>クーキンの不幸に心を動かされて、彼に恋してしまった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>72</th>\n",
+              "      <td>5.0</td>\n",
+              "      <td>73</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Dushechka</td>\n",
+              "      <td>Chehov</td>\n",
+              "      <td>Matsushita</td>\n",
+              "      <td>2009</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge, pass</td>\n",
+              "      <td>несчастья</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>трогать</td>\n",
+              "      <td>ugokasu</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>В конце концов несчастья Кукина тронули ее, он...</td>\n",
+              "      <td>クーキンの不幸せに心を動かされて、彼を恋してしまった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>73</th>\n",
+              "      <td>5.0</td>\n",
+              "      <td>74</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Dushechka</td>\n",
+              "      <td>Chehov</td>\n",
+              "      <td>MNumano</td>\n",
+              "      <td>2014</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge, pass</td>\n",
+              "      <td>несчастья</td>\n",
+              "      <td>3</td>\n",
+              "      <td>circumstances</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>трогать</td>\n",
+              "      <td>ugokasu</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>В конце концов несчастья Кукина тронули ее, он...</td>\n",
+              "      <td>クーキンの災難に心を動かされ、彼が好きになってしまった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>92</th>\n",
+              "      <td>7.0</td>\n",
+              "      <td>93</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Pervaya lyubov</td>\n",
+              "      <td>Turgenev</td>\n",
+              "      <td>Yonekawa</td>\n",
+              "      <td>1933</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>слова</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>слова</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>4</td>\n",
+              "      <td>心</td>\n",
+              "      <td>мучить</td>\n",
+              "      <td>kurushimeru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>слово мучило меня</td>\n",
+              "      <td>一言が、わたしの心を苦しめていた</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>98</th>\n",
+              "      <td>7.0</td>\n",
+              "      <td>99</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Pervaya lyubov</td>\n",
+              "      <td>Turgenev</td>\n",
+              "      <td>Yonekawa</td>\n",
+              "      <td>1933</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>рассказ</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>рассказ</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>4</td>\n",
+              "      <td>心</td>\n",
+              "      <td>поразить</td>\n",
+              "      <td>utsu</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>меня поразил рассказ Зинаиды</td>\n",
+              "      <td>ジナイーダの物語が、わたしの心を打ったのである。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>99</th>\n",
+              "      <td>7.0</td>\n",
+              "      <td>100</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Pervaya lyubov</td>\n",
+              "      <td>Turgenev</td>\n",
+              "      <td>Jinzai</td>\n",
+              "      <td>1952</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>рассказ</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>心</td>\n",
+              "      <td>поразить</td>\n",
+              "      <td>utsu</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>меня поразил рассказ Зинаиды</td>\n",
+              "      <td>ジナイーダのした話で、激しく心を打たれたのだ。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>101</th>\n",
+              "      <td>7.0</td>\n",
+              "      <td>102</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Pervaya lyubov</td>\n",
+              "      <td>Turgenev</td>\n",
+              "      <td>Yonekawa</td>\n",
+              "      <td>1933</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>чувство</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>чувство</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>5</td>\n",
+              "      <td>足</td>\n",
+              "      <td>останавливать</td>\n",
+              "      <td>hikitomeru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>странное чувство остановило меня</td>\n",
+              "      <td>あるふしぎな感情が、わたしの足を引き止めた。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>207</th>\n",
+              "      <td>8.0</td>\n",
+              "      <td>208</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Anna Karenina</td>\n",
+              "      <td>Tolstoy</td>\n",
+              "      <td>Kitamikado</td>\n",
+              "      <td>1979</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>мысль</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>4</td>\n",
+              "      <td>心</td>\n",
+              "      <td>обступать</td>\n",
+              "      <td>ryousuru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>мысли обступили ее</td>\n",
+              "      <td>毎日毎日の苦労のことが彼女の心を領した。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>308</th>\n",
+              "      <td>9.0</td>\n",
+              "      <td>309</td>\n",
+              "      <td>19</td>\n",
+              "      <td>Nos</td>\n",
+              "      <td>Gogol</td>\n",
+              "      <td>Hirai</td>\n",
+              "      <td>1938</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>вопрос</td>\n",
+              "      <td>4</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>вопрос</td>\n",
+              "      <td>intellect</td>\n",
+              "      <td>4</td>\n",
+              "      <td>心</td>\n",
+              "      <td>останавливать</td>\n",
+              "      <td>seisuru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>Этот вопрос остановил Ковалева и заставил его ...</td>\n",
+              "      <td>この問いがコワリョーフの心を制して、再び彼を考えさせた。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>580</th>\n",
+              "      <td>15.0</td>\n",
+              "      <td>581</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Master i Margarita</td>\n",
+              "      <td>Bulgakov</td>\n",
+              "      <td>Nakata</td>\n",
+              "      <td>2006</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>оркестр</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>оркестр</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>1</td>\n",
+              "      <td>神経</td>\n",
+              "      <td>мучить</td>\n",
+              "      <td>sainamu</td>\n",
+              "      <td>VTR</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>его мучил вездесущий оркестр</td>\n",
+              "      <td>ずっと耳につきまとい、何故か言いようもなく彼の神経を苛んでいたのは…オーケストラの音だった。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>593</th>\n",
+              "      <td>16.0</td>\n",
+              "      <td>594</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Sobachiye serdtse</td>\n",
+              "      <td>Bulgakov</td>\n",
+              "      <td>Mizuno</td>\n",
+              "      <td>1982</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>pass</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge, pass</td>\n",
+              "      <td>предчувствие</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>胸</td>\n",
+              "      <td>колоть</td>\n",
+              "      <td>kakimushiru</td>\n",
+              "      <td>VP</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>Полиграф Полиграфович, которого утром кольнуло...</td>\n",
+              "      <td>АФФ 朝からいまわしい予感に胸をかきむしられていたＰＰ</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>608</th>\n",
+              "      <td>16.0</td>\n",
+              "      <td>609</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Sobachiye serdtse</td>\n",
+              "      <td>Bulgakov</td>\n",
+              "      <td>Mizuno</td>\n",
+              "      <td>1982</td>\n",
+              "      <td>2.0</td>\n",
+              "      <td>sub_change</td>\n",
+              "      <td>1.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>предчувствие</td>\n",
+              "      <td>5</td>\n",
+              "      <td>feeling</td>\n",
+              "      <td>человек</td>\n",
+              "      <td>human</td>\n",
+              "      <td>6</td>\n",
+              "      <td>胸</td>\n",
+              "      <td>кольнуть</td>\n",
+              "      <td>sawagu</td>\n",
+              "      <td>VINTR</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>В этот ужасный день ещё утром Шарика кольнуло ...</td>\n",
+              "      <td>この恐ろしい日、まだ朝のうちから、シャリックは不吉な感に胸が騒ぐのを禁じられなかった</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>620</th>\n",
+              "      <td>17.0</td>\n",
+              "      <td>621</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Sonechka</td>\n",
+              "      <td>Ulitskaya</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>2007</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>hedge_body</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge, ben, cause</td>\n",
+              "      <td>халат</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>халат</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>1</td>\n",
+              "      <td>心</td>\n",
+              "      <td>успокаивать</td>\n",
+              "      <td>ochitsukaseru</td>\n",
+              "      <td>VCH</td>\n",
+              "      <td>8.0</td>\n",
+              "      <td>сверкая голубоватой белизной халата, неуместно...</td>\n",
+              "      <td>白衣は、…見る者の心を落ちつかせてもくれた。</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>625</th>\n",
+              "      <td>17.0</td>\n",
+              "      <td>626</td>\n",
+              "      <td>20</td>\n",
+              "      <td>Sonechka</td>\n",
+              "      <td>Ulitskaya</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>2007</td>\n",
+              "      <td>5.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>hedge</td>\n",
+              "      <td>музыка</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>музыка</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>5</td>\n",
+              "      <td>体 骨</td>\n",
+              "      <td>пронизать</td>\n",
+              "      <td>tsukinukeru</td>\n",
+              "      <td>VTRH</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>И музыка пронизала его насквозь, сладкой волно...</td>\n",
+              "      <td>音楽が体を突きぬけ、</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>656</th>\n",
+              "      <td>18.0</td>\n",
+              "      <td>657</td>\n",
+              "      <td>21</td>\n",
+              "      <td>Detstvo 1950</td>\n",
+              "      <td>Ulitskaya</td>\n",
+              "      <td>KNumano</td>\n",
+              "      <td>2015</td>\n",
+              "      <td>6.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0.0</td>\n",
+              "      <td>ben, cause</td>\n",
+              "      <td>флаг</td>\n",
+              "      <td>1</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>флаг</td>\n",
+              "      <td>thing</td>\n",
+              "      <td>1</td>\n",
+              "      <td>心</td>\n",
+              "      <td>радовать</td>\n",
+              "      <td>nagomu</td>\n",
+              "      <td>VC</td>\n",
+              "      <td>9.0</td>\n",
+              "      <td>этой хмурости радовали только тяжелые, темно-к...</td>\n",
+              "      <td>子のどんよりした風景の中でたったひとつ心を和ませてくれるものといえば、祝日が終わってもまだ片...</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "      tid  ...                                         text_trans\n",
+              "1     1.0  ...                        先ほどの印象はあれからずっと彼の心を去らなかったので、\n",
+              "3     1.0  ...                               さっき受けた印象がなかなか心から離れず、\n",
+              "5     1.0  ...                            …と考えることも心に不愉快なショックを与えた。\n",
+              "22    1.0  ...                       役人は恐怖に顔を歪め、おまけに対中ぶるぶる震わせていた。\n",
+              "29    2.0  ...            今何よりも彼の心を占めていたのは、ある不安な、どことなくはっきりしない考えだ。\n",
+              "30    2.0  ...                                   АФФ 特に彼は花に心をひかれて\n",
+              "31    2.0  ...                                   とりわけ注意を惹いたのは花々で、\n",
+              "71    5.0  ...                         クーキンの不幸に心を動かされて、彼に恋してしまった。\n",
+              "72    5.0  ...                        クーキンの不幸せに心を動かされて、彼を恋してしまった。\n",
+              "73    5.0  ...                       クーキンの災難に心を動かされ、彼が好きになってしまった。\n",
+              "92    7.0  ...                                   一言が、わたしの心を苦しめていた\n",
+              "98    7.0  ...                           ジナイーダの物語が、わたしの心を打ったのである。\n",
+              "99    7.0  ...                            ジナイーダのした話で、激しく心を打たれたのだ。\n",
+              "101   7.0  ...                             あるふしぎな感情が、わたしの足を引き止めた。\n",
+              "207   8.0  ...                               毎日毎日の苦労のことが彼女の心を領した。\n",
+              "308   9.0  ...                       この問いがコワリョーフの心を制して、再び彼を考えさせた。\n",
+              "580  15.0  ...     ずっと耳につきまとい、何故か言いようもなく彼の神経を苛んでいたのは…オーケストラの音だった。\n",
+              "593  16.0  ...                       АФФ 朝からいまわしい予感に胸をかきむしられていたＰＰ\n",
+              "608  16.0  ...         この恐ろしい日、まだ朝のうちから、シャリックは不吉な感に胸が騒ぐのを禁じられなかった\n",
+              "620  17.0  ...                             白衣は、…見る者の心を落ちつかせてもくれた。\n",
+              "625  17.0  ...                                         音楽が体を突きぬけ、\n",
+              "656  18.0  ...  子のどんよりした風景の中でたったひとつ心を和ませてくれるものといえば、祝日が終わってもまだ片...\n",
+              "\n",
+              "[22 rows x 24 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 5
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "sQGTgIdrYGEh",
+        "colab_type": "code",
+        "outputId": "2089585b-be20-4b6a-faa7-1371b2e859fe",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "print(df_AGT['text_orig'].iloc[656])"
+      ],
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "этой хмурости радовали только тяжелые, темно-красные от сырости флаги\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "Dxru8sSMbR9E",
+        "colab_type": "code",
+        "outputId": "b5724794-cde9-4f29-c7ad-ecfe3c7824e8",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 68
+        }
+      },
+      "source": [
+        "import nltk\n",
+        "nltk.download('stopwords')"
+      ],
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "[nltk_data] Downloading package stopwords to /root/nltk_data...\n",
+            "[nltk_data]   Unzipping corpora/stopwords.zip.\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "True"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 7
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "ETN67NMnbWjz",
+        "colab_type": "code",
+        "outputId": "f519a0cb-efa3-4a0b-a1a8-4154d57663be",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "# Загрузили стопслова для русского языка из nltk\n",
+        "stopset = stopwords.words('russian')\n",
+        "stopset[:10]"
+      ],
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "['и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со']"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 8
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "v1Vh6Cz7bbqQ",
+        "colab_type": "code",
+        "outputId": "118f15ef-0648-4430-edc3-851e87d67f8d",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 68
+        }
+      },
+      "source": [
+        "nltk.download('punkt')"
+      ],
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "[nltk_data] Downloading package punkt to /root/nltk_data...\n",
+            "[nltk_data]   Unzipping tokenizers/punkt.zip.\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "True"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 9
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "CRIeBNsDbf4m",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "# Токенизация, чистка\n",
+        "def tokenize(msg):\n",
+        "    # убрали знаки препинания и привели к нижнему регистру\n",
+        "    msg = re.sub('[!\"?/\\\\().:;,-]', '', msg).lower()\n",
+        "    msg = [w for w in word_tokenize(msg) if not w in stopset] # токенизировали и избавились от стоп слов\n",
+        "    return msg"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "BcYbFZGDbpxa",
+        "colab_type": "code",
+        "outputId": "2a339fa2-26d0-4e43-8e25-7794fe2ab8d6",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "tokenize(df_AGT['text_orig'].iloc[683])[:10]"
+      ],
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "['луна', 'врать', 'своей', 'многозначительностью']"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 11
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "_8-SVvuoclOQ",
+        "colab_type": "code",
+        "outputId": "d3527600-6e6c-4abf-dbd0-e466bff5541d",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 297
+        }
+      },
+      "source": [
+        "sns.countplot(x=df_AGT['ag_orig'], data=df_AGT, palette=\"Set3\") "
+      ],
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<matplotlib.axes._subplots.AxesSubplot at 0x7fdad25a2b38>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 12
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "image/png": "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\n",
+            "text/plain": [
+              "<Figure size 432x288 with 1 Axes>"
+            ]
+          },
+          "metadata": {
+            "tags": [],
+            "needs_background": "light"
+          }
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "rjgTGLH7drAm",
+        "colab_type": "text"
+      },
+      "source": [
+        "Tf-idf преобразование"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "prNICtb5cmbe",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from sklearn.feature_extraction.text import TfidfVectorizer"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "mQ418K6_cuG0",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "bow_tfidf = TfidfVectorizer(tokenizer=tokenize)\n",
+        "bowed_AGT = bow_tfidf.fit_transform(df_AGT['text_orig'])"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "NDhPQJrpc_Y5",
+        "colab_type": "code",
+        "outputId": "59a2215c-8d27-45f6-b778-18469d8df650",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 51
+        }
+      },
+      "source": [
+        "bowed_AGT"
+      ],
+      "execution_count": 21,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "<684x1229 sparse matrix of type '<class 'numpy.float64'>'\n",
+              "\twith 3132 stored elements in Compressed Sparse Row format>"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 21
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "Ho3-5niddliQ",
+        "colab_type": "text"
+      },
+      "source": [
+        "Кластеризация"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "SaVo68K-dKen",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from sklearn.cluster import KMeans"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "nnDX3s31dQMD",
+        "colab_type": "code",
+        "outputId": "dc3b2ef7-4c89-41a8-8928-b6d12869dbcf",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 68
+        }
+      },
+      "source": [
+        "model = KMeans(n_clusters=15, init='k-means++', max_iter=100, n_init=1, random_state=37)\n",
+        "model.fit(bowed_AGT)"
+      ],
+      "execution_count": 35,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=100,\n",
+              "       n_clusters=15, n_init=1, n_jobs=None, precompute_distances='auto',\n",
+              "       random_state=37, tol=0.0001, verbose=0)"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 35
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "GnAxOmwvdUzH",
+        "colab_type": "code",
+        "outputId": "4be18cc5-6d6d-4e48-895b-260c393de7cf",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "len(model.cluster_centers_)"
+      ],
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "5"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 17
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "aT5LC6tfdboT",
+        "colab_type": "code",
+        "outputId": "9f6047c3-933d-43ca-f634-b2154a07af8a",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        }
+      },
+      "source": [
+        "print(\"Top terms per cluster:\")\n",
+        "order_centroids = model.cluster_centers_.argsort()[:, ::-1] # индексы слов, по мере убывания близости к центру\n",
+        "terms = bow_tfidf.get_feature_names() # массив слов в том порядке, в котором их помнит kmeans\n",
+        "for i in range(15):\n",
+        "    print(\"Cluster %d:\" % i),\n",
+        "    for ind in order_centroids[i, :10]: \n",
+        "        print(terms[ind])\n",
+        "    print()"
+      ],
+      "execution_count": 36,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Top terms per cluster:\n",
+            "Cluster 0:\n",
+            "…\n",
+            "улыбка\n",
+            "интересовали\n",
+            "искусство\n",
+            "судьба\n",
+            "политика\n",
+            "наука\n",
+            "тоска\n",
+            "сила\n",
+            "влекла\n",
+            "\n",
+            "Cluster 1:\n",
+            "мое\n",
+            "чувства\n",
+            "производило\n",
+            "появление\n",
+            "неприятное\n",
+            "впечатление\n",
+            "наполняют\n",
+            "гуманные\n",
+            "заполняют\n",
+            "которые\n",
+            "\n",
+            "Cluster 2:\n",
+            "вопрос\n",
+            "беспокоит\n",
+            "расстроил\n",
+            "немного\n",
+            "ивана\n",
+            "заставил\n",
+            "остановил\n",
+            "подумать\n",
+            "ковалева\n",
+            "переночевать\n",
+            "\n",
+            "Cluster 3:\n",
+            "заслужившие\n",
+            "службе\n",
+            "общее\n",
+            "главные\n",
+            "уважение\n",
+            "качества\n",
+            "это\n",
+            "…\n",
+            "коверкали\n",
+            "кого\n",
+            "\n",
+            "Cluster 4:\n",
+            "мысль\n",
+            "эта\n",
+            "поразила\n",
+            "овладела\n",
+            "оскорбляла\n",
+            "неприятно\n",
+            "записке\n",
+            "огорчила\n",
+            "сухость\n",
+            "кити\n",
+            "\n",
+            "Cluster 5:\n",
+            "мысли\n",
+            "обступили\n",
+            "привели\n",
+            "попытки\n",
+            "чему\n",
+            "пронизали\n",
+            "две\n",
+            "мозг\n",
+            "начали\n",
+            "мучать\n",
+            "\n",
+            "Cluster 6:\n",
+            "это\n",
+            "обрадовало\n",
+            "событие\n",
+            "поражало\n",
+            "глаза\n",
+            "доказательство\n",
+            "популярности\n",
+            "ничуть\n",
+            "славы\n",
+            "время\n",
+            "\n",
+            "Cluster 7:\n",
+            "сердце\n",
+            "чтото\n",
+            "страху\n",
+            "охватившим\n",
+            "каждое\n",
+            "кольнуло\n",
+            "уязвило\n",
+            "тяжелое\n",
+            "слово\n",
+            "неприятное\n",
+            "\n",
+            "Cluster 8:\n",
+            "чрезвычайно\n",
+            "интересовал\n",
+            "письмо\n",
+            "взволновало\n",
+            "вопрос\n",
+            "которое\n",
+            "степу\n",
+            "сегодняшний\n",
+            "гораздо\n",
+            "день\n",
+            "\n",
+            "Cluster 9:\n",
+            "впечатление\n",
+            "давешнее\n",
+            "оставляло\n",
+            "важное\n",
+            "произвело\n",
+            "сведение\n",
+            "сильное\n",
+            "…\n",
+            "кого\n",
+            "колен\n",
+            "\n",
+            "Cluster 10:\n",
+            "зинаиды\n",
+            "поразил\n",
+            "рассказ\n",
+            "толку\n",
+            "слезы\n",
+            "сбили\n",
+            "обращение\n",
+            "убило\n",
+            "окончательно\n",
+            "мной\n",
+            "\n",
+            "Cluster 11:\n",
+            "пробирала\n",
+            "кривился\n",
+            "дрожь\n",
+            "чиновник\n",
+            "княжеский\n",
+            "ковалева\n",
+            "коверкали\n",
+            "кого\n",
+            "колен\n",
+            "колею\n",
+            "\n",
+            "Cluster 12:\n",
+            "радости\n",
+            "охватившим\n",
+            "овладевшей\n",
+            "беспричинно\n",
+            "ею\n",
+            "сердце\n",
+            "…\n",
+            "капает\n",
+            "комнате\n",
+            "коллекционеров\n",
+            "\n",
+            "Cluster 13:\n",
+            "мучило\n",
+            "нетерпение\n",
+            "слово\n",
+            "княжеский\n",
+            "ковалева\n",
+            "коверкали\n",
+            "кого\n",
+            "колен\n",
+            "колею\n",
+            "коллекционеров\n",
+            "\n",
+            "Cluster 14:\n",
+            "притворяться\n",
+            "лгать\n",
+            "принуждала\n",
+            "…\n",
+            "колченогим\n",
+            "ковалева\n",
+            "коверкали\n",
+            "кого\n",
+            "колен\n",
+            "колею\n",
+            "\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "HCOIFiuHd_ro",
+        "colab_type": "text"
+      },
+      "source": [
+        "Оценка"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "otTPeOQGdgNK",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "from sklearn.metrics import adjusted_rand_score, homogeneity_score, completeness_score, v_measure_score"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "pED2wYt6eaHB",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "labels = df_AGT.ag_orig_range # истинные метки событий\n",
+        "clust_labels = model.labels_ # метки номеров кластеров, возвращённых алгортмом"
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "mVZ2DWy7etfD",
+        "colab_type": "text"
+      },
+      "source": [
+        "Меряем Adjusted Rand Index.\n",
+        "\n",
+        "Rand Index (RI) выражает схожесть двух разных кластеризаций одной и той же выборки."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "X0vNKsA7edjv",
+        "colab_type": "code",
+        "outputId": "14faec5c-245e-413d-d53e-e355f29f5860",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 34
+        }
+      },
+      "source": [
+        "print(\"Adjusted Rand-Index:\",  adjusted_rand_score(labels, clust_labels))"
+      ],
+      "execution_count": 38,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Adjusted Rand-Index: 0.011668299140369015\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "beqTn2AXe0Pj",
+        "colab_type": "text"
+      },
+      "source": [
+        "Меряем гомогенность, полноту и V-меру."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "kq077iYZeiga",
+        "colab_type": "code",
+        "outputId": "5a42442f-ed33-4ea2-febd-77a5f2c745f3",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 68
+        }
+      },
+      "source": [
+        "print(\"Гомогенность:\", homogeneity_score(labels, clust_labels))\n",
+        "print(\"Полнота:\", completeness_score(labels, clust_labels))\n",
+        "print(\"V-мера\",  v_measure_score(labels, clust_labels))"
+      ],
+      "execution_count": 34,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Гомогенность: 0.13088003272907292\n",
+            "Полнота: 0.17898464492822858\n",
+            "V-мера 0.15119836415892346\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "XlaVYGHVe4wM",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        ""
+      ],
+      "execution_count": 0,
+      "outputs": []
+    }
+  ]
+}
